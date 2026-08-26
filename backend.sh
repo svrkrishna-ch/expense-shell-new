@@ -16,6 +16,7 @@ VALIDATE(){
     if [ $1 -ne 0 ]
     then
         echo -e "$2 ... $R FAILED $N"
+        exit 1
     else
         echo -e "$2 ... $G SUCCESS $N"
     fi
@@ -42,13 +43,22 @@ VALIDATE $? "Enabling NodeJS 20"
 dnf install nodejs -y &>>$LOG_FILE_NAME
 VALIDATE $? "Installing NodeJS"
 
-useradd expense &>>$LOG_FILE_NAME
-VALIDATE $? "Adding expense user"
+id expense &>>$LOG_FILE_NAME
+if [ $? -ne 0 ]
+then
+    useradd expense &>>$LOG_FILE_NAME
+    VALIDATE $? "Adding expense user"
+else
+    echo "expense user already exists ... $Y SKIPPING $N"
+VALIDATE
 
-mkdir /app
+
+
+mkdir  -p /app &>>$LOG_FILE_NAME
 VALIDATE $? "Creating app directory"
 
 cd /app
+rm -rf /app/*
 
 curl -o /tmp/backend.zip https://expense-builds.s3.us-east-1.amazonaws.com/expense-backend-v2.zip &>>$LOG_FILE_NAME
 VALIDATE $? "Downloading Backend"
